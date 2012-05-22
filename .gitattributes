@@ -1,0 +1,10 @@
+﻿*.jpg  binary
+*.png 	binary
+*.gif 	binary
+
+*.html text=auto
+*.htm text=auto
+*.css text=auto
+*.js text=auto
+*.sql text=auto
+*.php text=auto

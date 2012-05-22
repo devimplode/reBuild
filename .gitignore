@@ -1,0 +1,18 @@
+﻿############
+## reBuild
+############
+
+# generated cache files
+store/cache/
+store/log/
+
+
+############
+## Windows
+############
+
+# Windows image file caches
+Thumbs.db 
+
+# Folder config file
+Desktop.ini
