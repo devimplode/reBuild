@@ -2,10 +2,17 @@
 ## reBuild
 ############
 
-# generated cache files
+# generated files
 store/cache/
 store/log/
 
+# here could be your stuff
+store/public/
+store/protected/
+
+# testing/dummy files
+class/foo.php
+mod/foo.php
 
 ############
 ## Windows
