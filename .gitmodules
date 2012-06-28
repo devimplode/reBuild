@@ -1,0 +1,3 @@
+[submodule "class/reconnect"]
+	path = class/reconnect
+	url = git://github.com/devimplode/reConnect.git

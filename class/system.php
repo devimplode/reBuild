@@ -3,6 +3,7 @@ if(dirname(__FILE__)!=CD){die();}
 class system{
 	protected static $system;
 	protected static $eventManager;
+	protected static $databaseManager;
 	protected static $requestManager;
 	protected static $storageManager;
 	protected static $logManager;
@@ -22,6 +23,8 @@ class system{
 		self::$logManager = new logManager();
 		self::$storageManager = new storageManager();
 		self::$storageManager->loadDefaultStorage();
+		self::$databaseManager = new databaseManager();
+		self::$databaseManager->loadDefault();
 		self::$eventManager = new eventManager();
 		self::$requestManager = new requestManager();
 		self::$requestManager->processRequest();
@@ -32,6 +35,15 @@ class system{
 	}
 	public final static function EM(){
 		return self::getEventManager();
+	}
+	public final static function getDatabaseManager(){
+		return self::$databaseManager;
+	}
+	public final static function DB(){
+		return self::getDatabaseManager();
+	}
+	public final static function DM(){
+		return self::getDatabaseManager();
 	}
 	public final static function getRequestManager(){
 		return self::$requestManager;
