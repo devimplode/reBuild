@@ -12,8 +12,6 @@ class requestManager extends defaultClass{
 	private $get=array();
 	private $post=array();
 	private $file=array();
-	private $category;
-	private $type;
 	
 	public function __construct(){
 		//get Request
@@ -45,24 +43,30 @@ class requestManager extends defaultClass{
 		if($this->request['anchor']!=NULL)
 		switch(mb_substr($this->request['anchor'], mb_strrpos($this->request['anchor'],'.')+1)){
 			case 'php':
-				$this->type='php';
+				$this->request['anchor_type']='php';
 				break;
 			case 'png':
-				$this->type='png';
+				$this->request['anchor_type']='png';
 				break;
 			case 'jpg':
-				$this->type='jpg';
+				$this->request['anchor_type']='jpg';
 				break;
 			case 'js':
-				$this->type='js';
+				$this->request['anchor_type']='js';
 				break;
 			default:
-				$this->type='other';
+				$this->request['anchor_type']='other';
 		}
+		
+		$this->get=$_GET;
+		$this->post=$_POST;
+		$this->request['get']=&$this->get;
+		$this->request['post']=&$this->post;
+		
 	}
 	public function processRequest(){
 		if(isset($this->request['anchor']))
-			switch($this->type){
+			switch($this->request['anchor_type']){
 				case 'php':
 					//check for ports
 					if(system::SM()->get('system.config')->get('Ports','RequestConf')=="on")
@@ -86,15 +90,16 @@ class requestManager extends defaultClass{
 			$portsDir=system::SM()->get('system.config')->get('PortsDirectory','RequestConf');
 			$defaultPort=system::SM()->get('system.config')->get('DefaultPort','RequestConf');
 			if($defaultPort!==false && $portsDir!==false)
-				if(file_exists($portsDir.DS.$defaultPort))
-					include($portsDir.DS.$defaultPort);	
+				if(file_exists(RD.DS.$portsDir.DS.$defaultPort))
+					include(RD.DS.$portsDir.DS.$defaultPort);
 		}
 	}
 	private function loadPorts(){
-		if(!isset($this->request['anchor']) && $this->type=='php')
+		if(!isset($this->request['anchor']) && $this->request['anchor_type']=='php')
 			return;
 		$portsDir=system::SM()->get('system.config')->get('PortsDirectory','RequestConf');
 		if($portsDir!==false){
+			$portsDir=RD.DS.$portsDir;
 			if(file_exists($portsDir.DS.$this->request['anchor'])){
 				include($portsDir.DS.$this->request['anchor']);
 			}
@@ -103,10 +108,26 @@ class requestManager extends defaultClass{
 	public function request($what){
 		if(isset($this->request[$what]))
 			return $this->request[$what];
+		return false;
 	}
 	public function get($what,$type='string'){
-		if(isset($this->get[$what]))
-			return $this->get[$what];
+		if(isset($this->get[$what])){
+			switch($type){
+				case'int':
+					return intval($this->get[$what]);
+					break;
+				case'float':
+					return floatval($this->get[$what]);
+					break;
+				case'bool':
+					return (!empty($this->get[$what]))?true:false;
+					break;
+				default:
+				case'string':
+					return (string) $this->get[$what];
+			}
+		}
+		return false;
 	}
 }
 ?>
