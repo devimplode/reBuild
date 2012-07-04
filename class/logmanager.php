@@ -33,6 +33,13 @@ class logManager extends defaultClass{
 			//9765986709.6789	5(WARN)	300	<storage>:	MSG
 		}
 		$logFile=(system::SM()->get('system.config')->get('Filename','syslog'))?system::SM()->get('system.config')->get('Filename','syslog'):LOGDIRECTORY.DS.'syslog.log';
+		if(file_exists($logFile)){}
+		elseif(file_exists(LOGDIRECTORY.DS.$logFile)){
+			$logFile=LOGDIRECTORY.DS.$logFile;
+		}
+		elseif(file_exists(RD.DS.$logFile)){
+			$logFile=RD.DS.$logFile;
+		}
 		mod::fileWrite($logFile,implode(EOL,$data).EOL,FILE_APPEND);
 	}
 	//logentry on verbose level
