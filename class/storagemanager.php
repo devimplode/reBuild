@@ -10,7 +10,7 @@ class storageManager extends defaultClass{
 		$this->db[$storage->getName()]=array('type'=>$storage->getType(),'storage'=>&$storage);
 		return true;
 	}
-	public function has($name){
+	public function isOpen($name){
 		return (isset($this->db[$name]))?true:false;
 	}
 	public function get($name){

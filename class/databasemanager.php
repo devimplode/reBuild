@@ -3,13 +3,13 @@ class databaseManager extends defaultClass{
 	public function __construct(){
 	}
 	public function loadDefault(){
-		if(!system::SM()->has('db.config'))
+		if(!system::SM()->isOpen('db.config'))
 			try{
 				new storage('db.config','fileConfig',CONFIGDIRECTORY.'dbconfig'.EXT);
 			}
 			catch(StorageException $e){
 			}
-		if(system::SM()->has('db.config')){
+		if(system::SM()->isOpen('db.config')){
 			$conf=system::SM()->get('db.config');
 			$entryc=intval($conf->get('EntryCount'));
 			if($entryc>=1){
@@ -41,6 +41,9 @@ class databaseManager extends defaultClass{
 				return $this->db[$data]['db'];
 		}
 		return false;
+	}
+	public function isOpen($data=false){
+		return ($data!==false && is_string($data) && isset($this->db[$data]))?true:false;
 	}
 	public function open($data=false){
 		if(!$data || !is_array($data))
