@@ -1,9 +1,9 @@
 ; <?php die(); ?>
 
 [general]
-EntryCount = 1
+EntryCount = "s:1:\"1\";"
 
 [storage_0]
-name = "db.config"
-path = "dbconfig"
-type = "fileConfig"
+name = "s:9:\"db.config\";"
+path = "s:8:\"dbconfig\";"
+type = "s:10:\"fileConfig\";"

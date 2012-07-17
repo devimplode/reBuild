@@ -22,8 +22,8 @@ class system{
 	protected function initSubsystems(){
 		self::$logManager = new logManager();
 		self::$storageManager = new storageManager();
-		self::$storageManager->loadDefaultStorage();
 		self::$databaseManager = new databaseManager();
+		self::$storageManager->loadDefaultStorage();
 		self::$databaseManager->loadDefault();
 		self::$eventManager = new eventManager();
 		self::$requestManager = new requestManager();

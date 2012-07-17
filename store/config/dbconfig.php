@@ -1,13 +1,13 @@
 ; <?php die(); ?>
 
 [general]
-EntryCount = 1
+EntryCount = "i:1;"
 
 [db_0]
-name = "test"
-scheme = "mysql"
-host = "localhost"
-port = 3306
-user = "root"
-pass = ""
-db = "test"
+name = "s:4:\"test\";"
+scheme = "s:5:\"mysql\";"
+host = "s:9:\"localhost\";"
+port = "s:4:\"3306\";"
+user = "s:4:\"root\";"
+pass = "s:0:\"\";"
+db = "s:4:\"test\";"
