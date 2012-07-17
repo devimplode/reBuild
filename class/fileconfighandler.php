@@ -7,9 +7,17 @@ class fileConfigHandler extends defaultClass{
 		if(!(self::is_configFile($filename)))
 			throw new StorageException($filename." isn't a valid configFile");
 		$this->filename=$filename;
-		$this->db=parse_ini_file($filename,true);
-		if($this->db === false)
+		$db=parse_ini_file($filename,true);
+		if($db === false)
 			throw new StorageException("Couldn't parse ".$filename);
+		foreach($db as $secKey=>$sec){
+			$this->db[$secKey]=array();
+			foreach($sec as $key=>$val){
+				$this->db[$secKey][$key]=(((@unserialize($val)!==false) || ($val===serialize(false)))?unserialize($val):$val);
+				if($this->db[$secKey][$key] instanceOf reClosure)
+					$this->db[$secKey][$key]=$this->db[$secKey][$key]->getClosure();
+			}
+		}
 	}
 	public function __destruct(){
 		$this->live=false;
@@ -19,30 +27,54 @@ class fileConfigHandler extends defaultClass{
 	public function get($key, $sec='general'){
 		return((array_key_exists($sec,$this->db))?((array_key_exists($key,$this->db[$sec]))?$this->db[$sec][$key]:false):false);
 	}
+	public function getSection($sec='general'){
+		return(is_string($sec)&&isset($this->db[$sec]))?$this->db[$sec]:false;
+	}
+	public function getConfig(){
+		return $this->db;
+	}
 	public function set($value, $key, $sec='general'){
 		$this->edited=true;
 		$this->db[$sec][$key]=$value;
-		system::LOG()->i('config',"Setting '".$sec."->".$key."' to '".$value."' in file '".$this->filename."'");
+		system::LOG()->i('config',"Setting '".$sec."->".$key."' to '".((is_string($value))?$value:'Object')."' in file '".$this->filename."'");
 		$this->write();// in case of class-destruction
 	}
 	private function write(){
 		if($this->live || !$this->edited)
 			return;
 		system::LOG()->v('config',"Gathering changes for file '".$this->filename."'");
+		
+		$this->db=$this->arrayCheckClosures($this->db);
 		$res = array();
 		foreach($this->db as $key => $val)
 		{
 			if(is_array($val))
 			{
 				$res[] = EOL."[".$key."]";
-				foreach($val as $skey => $sval)
-					$res[] = $skey." = ".(is_numeric($sval) ? $sval : '"'.str_replace('"','\"',$sval).'"');
+				foreach($val as $skey => $sval){
+					$res[] = $skey.' = "'.str_replace('"','\"',serialize($sval)).'"';
+				}
 			}
-			else
-				$res[] = $key." = ".(is_numeric($val) ? $val : '"'.str_replace('"','\"',$val).'"');
+			else{
+				$res[] = $key.' = "'.str_replace('"','\"',serialize($val)).'"';
+			}
 		}
 		system::LOG()->d('config',"Writing changes to file '".$this->filename."'");
 		mod::fileWrite($this->filename, utf8_encode("; <?php die(); ?>".EOL.implode(EOL, $res).EOL),0);
+	}
+	private function arrayCheckClosures($arr){
+		$ret=array();
+		foreach($arr as $key=>$val){
+			if(is_array($val)){
+				$ret[$key]=$this->arrayCheckClosures($val);
+			}
+			elseif($val instanceOf Closure && !($val instanceOf reClosure)){
+				$ret[$key]=new reClosure($val);
+			}
+			else
+				$ret[$key]=$val;
+		}
+		return $ret;
 	}
 	
 	public static final function is_configFile($filename=false){
