@@ -1,10 +1,13 @@
 ; <?php die(); ?>
 
 [general]
+ErrorpageDirectory = "store/errorpages"
+
 [syslog]
-Filename = "store/log/system.log"
+Filename = "s:20:\"store/log/system.log\";"
 
 [RequestConf]
-Ports = "on"
-PortsDirectory = "store/ports"
-DefaultPort = "index.php"
+ShowError = "s:2:\"on\";"
+Ports = "s:2:\"on\";"
+PortsDirectory = "s:11:\"store/ports\";"
+DefaultPort = "s:9:\"index.php\";"
