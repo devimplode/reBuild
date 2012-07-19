@@ -3,7 +3,7 @@
 
 www.example.com/anchor[.php]
 www.example.com/[index[.php]]?arg*1=val*1&arg*n=val*n... GET
-www.example.com/abstract/url/only/seperated/by/regex/registration
+www.example.com/abstract/url/can/seperated/by/regex/registration
 
 */
 
@@ -16,10 +16,7 @@ class requestManager extends defaultClass{
 	
 	public function __construct(){
 		//get Request
-		$this->analyzeRequest();
-		//load config
-		
-				
+		$this->analyzeRequest();	
 	}
 	private function analyzeRequest(){
 		$this->request['host_name']=$_SERVER['SERVER_NAME'];//our name
@@ -547,6 +544,17 @@ class requestManager extends defaultClass{
 		}
 		return false;
 	}
+	public function unregisterRequest($id){
+		if(is_string($id)){
+			if(!system::SM()->isOpen('RM.requests'))
+				try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
+			if(!system::SM()->isOpen('RM.requests'))
+				return false;
+			system::SM()->get('RM.requests')->removeSection($id);
+			return true;
+		}
+		return false;
+	}
 	public function registerAnchor($id,$filter,$action,$flags=array()){
 		if(is_string($id) && is_array($filter) && is_array($action) && is_array($flags)){
 			if(!system::SM()->isOpen('RM.anchors'))
@@ -556,6 +564,17 @@ class requestManager extends defaultClass{
 			system::SM()->get('RM.anchors')->set($filter,'filter',$id);
 			system::SM()->get('RM.anchors')->set($flags,'flags',$id);
 			system::SM()->get('RM.anchors')->set($action,'action',$id);
+			return true;
+		}
+		return false;
+	}
+	public function unregisterAnchor($id){
+		if(is_string($id)){
+			if(!system::SM()->isOpen('RM.anchors'))
+				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
+			if(!system::SM()->isOpen('RM.anchors'))
+				return false;
+			system::SM()->get('RM.anchors')->removeSection($id);
 			return true;
 		}
 		return false;
