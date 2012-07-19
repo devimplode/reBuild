@@ -39,6 +39,26 @@ class fileConfigHandler extends defaultClass{
 		system::LOG()->i('config',"Setting '".$sec."->".$key."' to '".((is_string($value))?$value:'Object')."' in file '".$this->filename."'");
 		$this->write();// in case of class-destruction
 	}
+	public function removeKey($key, $sec='general'){
+		if(isset($this->db[$sec][$key])){
+			unset($this->db[$sec][$key]);
+			$this->edited=true;
+			system::LOG()->i('config',"Unsetting key '".$sec."->".$key."' in file '".$this->filename."'");
+			$this->write();// in case of class-destruction
+			return true;
+		}
+		return false;
+	}
+	public function removeSection($sec){
+		if(isset($this->db[$sec])){
+			unset($this->db[$sec]);
+			$this->edited=true;
+			system::LOG()->i('config',"Unsetting section '".$sec."' in file '".$this->filename."'");
+			$this->write();// in case of class-destruction
+			return true;
+		}
+		return false;
+	}
 	private function write(){
 		if($this->live || !$this->edited)
 			return;
