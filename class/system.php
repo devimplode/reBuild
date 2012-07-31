@@ -1,16 +1,11 @@
 <?php
 if(dirname(__FILE__)!=CD){die();}
 class system{
-	protected static $system;
-	protected static $eventManager;
-	protected static $databaseManager;
-	protected static $requestManager;
-	protected static $storageManager;
-	protected static $logManager;
-	
-	
+	protected static $db;
+
 	function __construct(){
-		self::$system = $this;
+		self::$db=array('classes'=>array(),'aliases'=>array());
+		self::register($this);
 		function __autoload($className){
 			if(file_exists(CD.DS.mb_strtolower($className).EXT))
 				require_once(CD.DS.mb_strtolower($className).EXT);
@@ -18,50 +13,51 @@ class system{
 		}
 		$this->initSubsystems();
 	}
-	
 	protected function initSubsystems(){
-		self::$logManager = new logManager();
-		self::$storageManager = new storageManager();
-		self::$databaseManager = new databaseManager();
-		self::$storageManager->loadDefaultStorage();
-		self::$databaseManager->loadDefault();
-		self::$eventManager = new eventManager();
-		self::$requestManager = new requestManager();
-		self::$requestManager->processRequest();
+		self::load('logManager');
+		self::registerAlias('logManager','LOG');
+		self::load('storageManager');
+		self::registerAlias('storageManager','SM');
+		self::SM()->loadDefaultStorage();
+		self::load('databaseManager');
+		self::registerAlias('databaseManager','DM');
+		self::DM()->loadDefault();
+		self::load('eventManager');
+		self::registerAlias('eventManager','EM');
+		self::load('requestManager');
+		self::registerAlias('requestManager','RM');
+		self::RM()->processRequest();
 	}
-	
-	public final static function getEventManager(){
-		return self::$eventManager;
+
+	public final static function __callStatic($functname,$args){
+		if(isset(self::$db['classes'][$functname]))
+			return self::$db['classes'][$functname];
+		elseif(isset(self::$db['aliases'][$functname]))
+			return self::$db['classes'][self::$db['aliases'][$functname]];
+		else
+			return false;
 	}
-	public final static function EM(){
-		return self::getEventManager();
+	public final static function load($classname){
+		if(isset(self::$db['classes'][$classname]))
+			return true;
+		return self::register(new $classname);
 	}
-	public final static function getDatabaseManager(){
-		return self::$databaseManager;
+	public final static function register($class){
+		if(is_object($class)){
+			$name=get_class($class);
+			if($name!=false){
+				self::$db['classes'][$name]=$class;
+				return true;
+			}
+		}
+		return false;
 	}
-	public final static function DB(){
-		return self::getDatabaseManager();
-	}
-	public final static function DM(){
-		return self::getDatabaseManager();
-	}
-	public final static function getRequestManager(){
-		return self::$requestManager;
-	}
-	public final static function RM(){
-		return self::getRequestManager();
-	}
-	public final static function getLogManager(){
-		return self::$logManager;
-	}
-	public final static function LOG(){
-		return self::getLogManager();
-	}
-	public final static function getStorageManager(){
-		return self::$storageManager;
-	}
-	public final static function SM(){
-		return self::getStorageManager();
-	}
+	public final static function registerAlias($classname,$alias){
+		if(isset(self::$db['classes'][$classname])){
+			self::$db['aliases'][$alias]=$classname;
+			return true;
+		}
+		return false;
+	}	
 }
 ?>
