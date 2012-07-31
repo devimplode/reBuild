@@ -20,8 +20,8 @@ class system{
 		self::registerAlias('storageManager','SM');
 		self::SM()->loadDefaultStorage();
 		self::load('databaseManager');
-		self::registerAlias('databaseManager','DM');
-		self::DM()->loadDefault();
+		self::registerAlias('databaseManager','DB');
+		self::DB()->loadDefault();
 		self::load('eventManager');
 		self::registerAlias('eventManager','EM');
 		self::load('requestManager');
