@@ -85,10 +85,11 @@ class requestManager extends defaultClass{
 		system::LOG()->v('requestmanager.processor','finishRequest called. switching to requestState -1! request processor should stop after this round.');
 	}
 	private function loadRegisteredRequest(){
-		if(!system::SM()->isOpen('RM.requests'))
+		if(!system::SM()->isOpen('RM.requests')){
 			try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-		if(!system::SM()->isOpen('RM.requests'))
-			return false;
+			if(!system::SM()->isOpen('RM.requests'))
+				return false;
+		}
 		$conf=system::SM()->get('RM.requests')->getConfig();
 		$registeredMatch=false;
 			foreach($conf as $id=>$data){
@@ -197,10 +198,11 @@ class requestManager extends defaultClass{
 	}
 	private function loadRegisteredAnchor(){
 		if(isset($this->request['anchor']) && isset($this->request['anchor_type'])){
-			if(!system::SM()->isOpen('RM.anchors'))
+			if(!system::SM()->isOpen('RM.anchors')){
 				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.anchors'))
-				return false;
+				if(!system::SM()->isOpen('RM.anchors'))
+					return false;
+			}
 			$conf=system::SM()->get('RM.anchors')->getConfig();
 			$registeredMatch=false;
 			foreach($conf as $id=>$data){
@@ -533,10 +535,11 @@ class requestManager extends defaultClass{
 	}
 	public function registerRequest($id,$filter,$action,$flags=array()){
 		if(is_string($id) && is_array($filter) && is_array($action) && is_array($flags)){
-			if(!system::SM()->isOpen('RM.requests'))
+			if(!system::SM()->isOpen('RM.requests')){
 				try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.requests'))
-				return false;
+				if(!system::SM()->isOpen('RM.requests'))
+					return false;
+			}
 			system::SM()->get('RM.requests')->set($filter,'filter',$id);
 			system::SM()->get('RM.requests')->set($flags,'flags',$id);
 			system::SM()->get('RM.requests')->set($action,'action',$id);
@@ -546,10 +549,11 @@ class requestManager extends defaultClass{
 	}
 	public function unregisterRequest($id){
 		if(is_string($id)){
-			if(!system::SM()->isOpen('RM.requests'))
+			if(!system::SM()->isOpen('RM.requests')){
 				try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.requests'))
-				return false;
+				if(!system::SM()->isOpen('RM.requests'))
+					return false;
+			}
 			system::SM()->get('RM.requests')->removeSection($id);
 			return true;
 		}
@@ -557,10 +561,11 @@ class requestManager extends defaultClass{
 	}
 	public function registerAnchor($id,$filter,$action,$flags=array()){
 		if(is_string($id) && is_array($filter) && is_array($action) && is_array($flags)){
-			if(!system::SM()->isOpen('RM.anchors'))
+			if(!system::SM()->isOpen('RM.anchors')){
 				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.anchors'))
-				return false;
+				if(!system::SM()->isOpen('RM.anchors'))
+					return false;
+			}
 			system::SM()->get('RM.anchors')->set($filter,'filter',$id);
 			system::SM()->get('RM.anchors')->set($flags,'flags',$id);
 			system::SM()->get('RM.anchors')->set($action,'action',$id);
@@ -570,10 +575,11 @@ class requestManager extends defaultClass{
 	}
 	public function unregisterAnchor($id){
 		if(is_string($id)){
-			if(!system::SM()->isOpen('RM.anchors'))
+			if(!system::SM()->isOpen('RM.anchors')){
 				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.anchors'))
-				return false;
+				if(!system::SM()->isOpen('RM.anchors'))
+					return false;
+			}
 			system::SM()->get('RM.anchors')->removeSection($id);
 			return true;
 		}
