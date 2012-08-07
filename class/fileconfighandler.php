@@ -38,6 +38,7 @@ class fileConfigHandler extends defaultClass{
 		$this->db[$sec][$key]=$value;
 		system::LOG()->i('config',"Setting '".$sec."->".$key."' to '".((is_string($value))?$value:'Object')."' in file '".$this->filename."'");
 		$this->write();// in case of class-destruction
+		return true;
 	}
 	public function removeKey($key, $sec='general'){
 		if(isset($this->db[$sec][$key])){
