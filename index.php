@@ -4,7 +4,6 @@ define('DEBUG',false);
 define('DS',(defined('DIRECTORY_SEPARATOR'))?DIRECTORY_SEPARATOR:'/'); //fallback if php-directory-module isn't implemented
 define('RD',dirname(__FILE__)); //Root-Directory
 define('CD',RD.DS.'class'); //CLASS-Directory
-define('ED',RD.DS.'event'); //EVENT-Directory
 define('MD',RD.DS.'mod'); //MOD-Directory
 define('SD',RD.DS.'store'); //STORAGE-Directory
 define('LOGDIRECTORY',SD.DS.'log'); //LOG-Directory
