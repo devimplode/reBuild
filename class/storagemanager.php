@@ -1,7 +1,7 @@
 <?php
 class storageManager extends defaultClass{
 	public function __construct(){
-		
+		$this->loadDefaultStorage();
 	}
 	
 	public function registerStorage($storage){
@@ -9,6 +9,15 @@ class storageManager extends defaultClass{
 			return false;
 		$this->db[$storage->getName()]=array('type'=>$storage->getType(),'storage'=>&$storage);
 		return true;
+	}
+	public function open($name,$type,$connection){
+		if(isset($this->db[$name]))
+			return false;
+		try{
+			$re=$this->registerStorage(new storage($name,$type,$connection,false));
+		}
+		catch(StorageException $e){return false;}
+		return $re;
 	}
 	public function isOpen($name){
 		return (isset($this->db[$name]))?true:false;
@@ -21,20 +30,21 @@ class storageManager extends defaultClass{
 	}
 	public function loadDefaultStorage(){
 		try{
-			new storage('storage.default.config','fileConfig',CONFIGDIRECTORY.'storage.default'.EXT);
-			$entryc=intval($this->get('storage.default.config')->get('EntryCount'));
+			$this->open('storage.default.config','fileConfig',CONFIGDIRECTORY.'storage.default'.EXT);
+			$entryc=intval(system::C()->get('storage.default')->general->EntryCount);
 			if($entryc>=1){
 				$defaults=array();
 				for($i=0;$i<$entryc;$i++){
+					$conf=system::C()->get('storage.default')->get('storage_'.$i);
 					$entry=array();
-					$entry['name']=$this->get('storage.default.config')->get('name','storage_'.$i);
-					$entry['path']=$this->get('storage.default.config')->get('path','storage_'.$i);
-					$entry['type']=$this->get('storage.default.config')->get('type','storage_'.$i);
+					$entry['name']=$conf->name;
+					$entry['path']=$conf->path;
+					$entry['type']=$conf->type;
 					$defaults[]=$entry;
 				}
 				foreach($defaults as $i=>$entry){
 					try{
-						new storage($entry['name'],$entry['type'],CONFIGDIRECTORY.$entry['path'].EXT);
+						$this->open($entry['name'],$entry['type'],CONFIGDIRECTORY.$entry['path'].EXT);
 					}
 					catch(StorageException $e){
 						system::LOG()->w('StorageException',"Couldn't load default storage object: '".$entry['name']."' - ".$e->getMessage(),500);
@@ -43,13 +53,6 @@ class storageManager extends defaultClass{
 			}
 		}
 		catch(StorageException $e){}
-		try{
-			new storage('system.config','fileConfig',CONFIGDIRECTORY.'system'.EXT);
-		}
-		catch(StorageException $e){
-			system::LOG()->e('StorageException',"Couldn't load default storage objects: ".$e->getMessage(),500);
-			return false;
-		}
 	}
 }
 ?>

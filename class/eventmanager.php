@@ -15,52 +15,36 @@ class eventManager{
 	 * unregister all event handlers:
 	 * system::EM()->detachAll('customEvent');
 	 */
-	public function call($eventName,$args){
+	public function __construct(){
+		$this->call('EM.construct',$this);
+	}
+	public function __call($eventName,$args){
+		$this->call($eventName,$args);
+	}
+	public function call($eventName,$args=false){
 		//execute Event $eventName
 		//load event-config
-		if(!system::SM()->isOpen('EM.events')){
-			try{new storage('EM.events','fileConfig',CONFIGDIRECTORY.'EM.events'.EXT);}catch(StorageException $e){echo "OMG!".$e->getMessage();return false;}
-			if(!system::SM()->isOpen('EM.events'))
-				return false;
-		}
-		$events=system::SM()->get('EM.events')->getSection($eventName);
-		if(is_array($events))
+		$events=system::C()->get('EM.events')->get($eventName);
+		if($events)
 			foreach($events as $event)
 				$event($args);
 	}
 	public function attach($eventName,$handlerName,$funct){
 		if(is_string($eventName) && is_string($handlerName) && ($funct instanceOf Closure || $funct instanceOf reClosure)){
-			if(!system::SM()->isOpen('EM.events')){
-				try{new storage('EM.events','fileConfig',CONFIGDIRECTORY.'EM.events'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('EM.events'))
-					return false;
-			}
-			if(system::SM()->get('EM.events')->set($funct,$handlerName,$eventName))
+			if(system::C()->get('EM.events')->get($eventName)->set($funct,$handlerName))
 				return true;
 		}
 		return false;
 	}
 	public function detach($eventName,$handlerName){
 		if(is_string($eventName) && is_string($handlerName)){
-			if(!system::SM()->isOpen('EM.events')){
-				try{new storage('EM.events','fileConfig',CONFIGDIRECTORY.'EM.events'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('EM.events'))
-					return false;
-			}
-			if(system::SM()->get('EM.events')->removeKey($handlerName,$eventName))
-				return true;
+			return(system::C()->get('EM.events')->get($eventName)->del($handlerName));
 		}
 		return false;
 	}
 	public function detachAll($eventName){
 		if(is_string($eventName)){
-			if(!system::SM()->isOpen('EM.events')){
-				try{new storage('EM.events','fileConfig',CONFIGDIRECTORY.'EM.events'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('EM.events'))
-					return false;
-			}
-			if(system::SM()->get('EM.events')->removeSection($eventName))
-				return true;
+			return(system::C()->get('EM.events')->del($eventName));
 		}
 		return false;
 	}

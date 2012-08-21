@@ -32,13 +32,14 @@ class logManager extends defaultClass{
 			$data[]=$a['t']."\t".$a['l']."(".self::levelToString($a['l']).")\t".$a['c']."\t".$a['tag'].":\t".serialize($a['msg']);
 			//9765986709.6789	5(WARN)	300	<storage>:	MSG
 		}
-		$logFile=(system::SM()->get('system.config')->get('Filename','syslog'))?system::SM()->get('system.config')->get('Filename','syslog'):LOGDIRECTORY.DS.'syslog.log';
-		if(file_exists($logFile)){}
-		elseif(file_exists(LOGDIRECTORY.DS.$logFile)){
-			$logFile=LOGDIRECTORY.DS.$logFile;
-		}
-		elseif(file_exists(RD.DS.$logFile)){
-			$logFile=RD.DS.$logFile;
+		$logFile=(system::C()->system->syslog->Filename)?system::C()->system->syslog->Filename:LOGDIRECTORY.DS.'syslog.log';
+		if(!file_exists($logFile)){
+			if(file_exists(LOGDIRECTORY.DS.$logFile)){
+				$logFile=LOGDIRECTORY.DS.$logFile;
+			}
+			elseif(file_exists(RD.DS.$logFile)){
+				$logFile=RD.DS.$logFile;
+			}
 		}
 		mod::fileWrite($logFile,implode(EOL,$data).EOL,FILE_APPEND);
 	}

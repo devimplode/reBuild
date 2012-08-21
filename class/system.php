@@ -14,19 +14,18 @@ class system{
 		$this->initSubsystems();
 	}
 	protected function initSubsystems(){
+		self::load('config');
+		self::registerAlias('config','C');
 		self::load('logManager');
 		self::registerAlias('logManager','LOG');
 		self::load('storageManager');
 		self::registerAlias('storageManager','SM');
-		self::SM()->loadDefaultStorage();
-		self::load('databaseManager');
-		self::registerAlias('databaseManager','DB');
-		self::DB()->loadDefault();
 		self::load('eventManager');
 		self::registerAlias('eventManager','EM');
+		self::load('databaseManager');
+		self::registerAlias('databaseManager','DB');
 		self::load('requestManager');
 		self::registerAlias('requestManager','RM');
-		self::RM()->processRequest();
 	}
 
 	public final static function __callStatic($functname,$args){
@@ -43,18 +42,26 @@ class system{
 		return self::register(new $classname);
 	}
 	public final static function register($class){
+		if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegister',$class);
 		if(is_object($class)){
 			$name=get_class($class);
 			if($name!=false){
+				if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegister.'.$name,$class);
 				self::$db['classes'][$name]=$class;
+				if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegistered',array($name=>$class));
+				if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegistered.'.$name,$class);
 				return true;
 			}
 		}
 		return false;
 	}
 	public final static function registerAlias($classname,$alias){
+		if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegisterAlias',array('class'=>$classname,'alias',$alias));
+		if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegisterAlias.'.$alias,array('class'=>$classname,'alias',$alias));
 		if(isset(self::$db['classes'][$classname])){
 			self::$db['aliases'][$alias]=$classname;
+			if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegisteredAlias',array('class'=>$classname,'alias',$alias));
+			if(isset(self::$db['aliases']['EM']))self::EM()->call('onSystemRegisteredAlias.'.$alias,array('class'=>$classname,'alias',$alias));
 			return true;
 		}
 		return false;

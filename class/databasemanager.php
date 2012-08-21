@@ -1,33 +1,26 @@
 <?php
 class databaseManager extends defaultClass{
 	public function __construct(){
+		$this->loadDefault();
 	}
 	public function loadDefault(){
-		if(!system::SM()->isOpen('db.config'))
-			try{
-				new storage('db.config','fileConfig',CONFIGDIRECTORY.'dbconfig'.EXT);
+		$entryc=intval(system::C()->dbconfig->general->EntryCount);
+		if($entryc>=1){
+			$defaults=array();
+			for($i=0;$i<$entryc;$i++){
+				$conf=system::C()->dbconfig->get('db_'.$i);
+				$entry=array();
+				$entry['name']=$conf->name;
+				$entry['scheme']=$conf->scheme;
+				$entry['host']=$conf->host;
+				$entry['port']=$conf->port;
+				$entry['user']=$conf->user;
+				$entry['pass']=$conf->pass;
+				$entry['db']=$conf->db;
+				$defaults[]=$entry;
 			}
-			catch(StorageException $e){
-			}
-		if(system::SM()->isOpen('db.config')){
-			$conf=system::SM()->get('db.config');
-			$entryc=intval($conf->get('EntryCount'));
-			if($entryc>=1){
-				$defaults=array();
-				for($i=0;$i<$entryc;$i++){
-					$entry=array();
-					$entry['name']=$conf->get('name','db_'.$i);
-					$entry['scheme']=$conf->get('scheme','db_'.$i);
-					$entry['host']=$conf->get('host','db_'.$i);
-					$entry['port']=$conf->get('port','db_'.$i);
-					$entry['user']=$conf->get('user','db_'.$i);
-					$entry['pass']=$conf->get('pass','db_'.$i);
-					$entry['db']=$conf->get('db','db_'.$i);
-					$defaults[]=$entry;
-				}
-				foreach($defaults as $i=>$entry){
-					$this->open($entry);
-				}
+			foreach($defaults as $i=>$entry){
+				$this->open($entry);
 			}
 		}
 	}

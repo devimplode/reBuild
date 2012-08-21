@@ -4,7 +4,7 @@ class storage{
 	protected $type;
 	protected $storageHandler;
 	
-	public function __construct($name,$type,$connection){
+	public function __construct($name,$type,$connection,$register=true){
 		if(!empty($name)&&!empty($type)&&(is_array($connection)||is_string($connection))){
 			$this->name=$name;
 			$this->type=$type;
@@ -58,8 +58,9 @@ class storage{
 				throw new StorageException("Couldn't create storageHandler for new storage '".$name."': ".$e->getMessage());
 			}
 			if($this->storageHandler){
-				if(!system::SM()->registerStorage($this))
-					throw new StorageException("Couldn't register new storage '".$name."' at storageManager");
+				if($register)// we shouldn't call system::SM() in some situations
+					if(!system::SM()->registerStorage($this))
+						throw new StorageException("Couldn't register new storage '".$name."' at storageManager");
 			}
 			else{
 				$e=new UnexpectedValueException();

@@ -70,7 +70,7 @@ class requestManager extends defaultClass{
 					$this->loadDefaultPort();
 					break;
 				case 5:
-					if(system::SM()->get('system.config')->get('ShowError','RequestConf')=="on")
+					if(system::C()->system->RequestConf->ShowError=="on")
 						$this->loadErrorPage("404");
 					break;
 				default:
@@ -85,125 +85,115 @@ class requestManager extends defaultClass{
 		system::LOG()->v('requestmanager.processor','finishRequest called. switching to requestState -1! request processor should stop after this round.');
 	}
 	private function loadRegisteredRequest(){
-		if(!system::SM()->isOpen('RM.requests')){
-			try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-			if(!system::SM()->isOpen('RM.requests'))
-				return false;
-		}
-		$conf=system::SM()->get('RM.requests')->getConfig();
+		$conf=system::C()->get('RM.requests');
 		$registeredMatch=false;
-			foreach($conf as $id=>$data){
-				//parse filter
-				$flags=(isset($data['flags']))?$data['flags']:array();
-				if(isset($data['filter']) && isset($data['action']) && $this->filterMatch($data['filter'],$flags)){
-					$tmp=array('directorys'=>array(),'file'=>$this->request['anchor']); // store temporary stuff here
-					foreach($data['action'] as $cmd=>$args){
-						switch(mb_strtolower($cmd)){
-							case'run':
-								if(is_array($args))
-									foreach($args as $k=>$v){
-										if($v instanceof reClosure){ //0=>function(){system::do(stuff);}
-											$v();
-										}
-										elseif(is_string($v) && function_exists($v) && in_array($v,get_defined_functions())){ //0=>'functionname'
-											$v();
-										}
-										elseif(is_string($k) && is_string($v) && (class_exists($k) && in_array($k,get_declared_classes())) && (method_exists($k,$v) && in_array($v,get_class_methods($k))) ){ //'classname'=>'functionname'
-											$k::$v();
-										}
+		foreach($conf as $id=>$data){
+			//parse filter
+			$flags=(isset($data->flags))?$data->flags:array();
+			if(isset($data->filter) && isset($data->action) && $this->filterMatch($data->filter,$flags)){
+				$tmp=array('directorys'=>array(),'file'=>$this->request['anchor']); // store temporary stuff here
+				foreach($data->action as $cmd=>$args){
+					switch(mb_strtolower($cmd)){
+						case'run':
+							if(is_array($args))
+								foreach($args as $k=>$v){
+									if($v instanceof reClosure){ //0=>function(){system::do(stuff);}
+										$v();
 									}
-								else
-									if($args instanceof reClosure){ //0=>function(){system::do(stuff);}
-										$args();
+									elseif(is_string($v) && function_exists($v) && in_array($v,get_defined_functions())){ //0=>'functionname'
+										$v();
 									}
-									elseif(is_string($args) && function_exists($args) && in_array($args,get_defined_functions())){ //'run'=>'functionname'
-										$args();
+									elseif(is_string($k) && is_string($v) && (class_exists($k) && in_array($k,get_declared_classes())) && (method_exists($k,$v) && in_array($v,get_class_methods($k))) ){ //'classname'=>'functionname'
+										$k::$v();
 									}
-								break;
-							case'include':
-								if(is_array($args))
-									foreach($args as $file){
-										if(is_file($file))
-											@include($file);
-									}
-								elseif(is_string($args)){
-									if(is_file($args))
-										@include($args);
 								}
-								break;
-							case'header':
-								if(is_array($args))
-									foreach($args as $k=>$v){
-										if(is_string($k) && is_string($v))
-											header($k.': '.$v);
-										elseif(is_string($v))
-											header($v);
-									}
-								elseif(is_string($args))
-									header($args);
-								break;
-							case'direct':
-								if(is_array($args))
-									foreach($args as $file){
-										if(is_file($file))
-											readfile($file);
-									}
-								elseif(is_string($args)){
-									if(is_file($args))
-										readfile($args);
+							else
+								if($args instanceof reClosure){ //0=>function(){system::do(stuff);}
+									$args();
 								}
-								break;
-							case'lookup':
-								if(is_array($args))
-									foreach($args as $dir){
-										if(is_string($dir) && is_dir($dir))
-											$tmp['directorys'][]=$dir;
-										elseif(is_string($dir) && is_dir(RD.DS.$dir))
-											$tmp['directorys'][]=RD.DS.$dir;
-										elseif(is_string($dir) && is_dir(SD.DS.$dir))
-											$tmp['directorys'][]=SD.DS.$dir;
-									}
-								else{
-									if(is_string($args) && is_dir($args))
-										$tmp['directorys'][]=$args;
-									elseif(is_string($args) && is_dir(RD.DS.$args))
-										$tmp['directorys'][]=RD.DS.$args;
-									elseif(is_string($args) && is_dir(SD.DS.$args))
-										$tmp['directorys'][]=SD.DS.$args;
+								elseif(is_string($args) && function_exists($args) && in_array($args,get_defined_functions())){ //'run'=>'functionname'
+									$args();
 								}
-								break;
-							case'anchorappend':
-								if(is_string($args))
-									$tmp['file']=$this->request['anchor'].$args;
-								break;
-							default:
-						}//end switch(mb_strtolower($cmd))
-					}//end foreach($data['action'] as $cmd=>$args)
-					if(count($tmp['directorys']))
-						foreach($tmp['directorys'] as $dir)
-							if(is_file($dir.DS.$tmp['file'])){
-								readfile($dir.DS.$tmp['file']);
-								break;
+							break;
+						case'include':
+							if(is_array($args))
+								foreach($args as $file){
+									if(is_file($file))
+										@include($file);
+								}
+							elseif(is_string($args)){
+								if(is_file($args))
+									@include($args);
 							}
-					if(in_array('last',$flags) || (isset($flags['last']) && $flags['last']=true)){
-						$this->finishRequest();
-						return true;
-					}
-					$registeredMatch=true;
-				}//end action
-			}//end foreach($conf as $id=>$data)
-			if($registeredMatch)
-				return true;
+							break;
+						case'header':
+							if(is_array($args))
+								foreach($args as $k=>$v){
+									if(is_string($k) && is_string($v))
+										header($k.': '.$v);
+									elseif(is_string($v))
+										header($v);
+								}
+							elseif(is_string($args))
+								header($args);
+							break;
+						case'direct':
+							if(is_array($args))
+								foreach($args as $file){
+									if(is_file($file))
+										readfile($file);
+								}
+							elseif(is_string($args)){
+								if(is_file($args))
+									readfile($args);
+							}
+							break;
+						case'lookup':
+							if(is_array($args))
+								foreach($args as $dir){
+									if(is_string($dir) && is_dir($dir))
+										$tmp['directorys'][]=$dir;
+									elseif(is_string($dir) && is_dir(RD.DS.$dir))
+										$tmp['directorys'][]=RD.DS.$dir;
+									elseif(is_string($dir) && is_dir(SD.DS.$dir))
+										$tmp['directorys'][]=SD.DS.$dir;
+								}
+							else{
+								if(is_string($args) && is_dir($args))
+									$tmp['directorys'][]=$args;
+								elseif(is_string($args) && is_dir(RD.DS.$args))
+									$tmp['directorys'][]=RD.DS.$args;
+								elseif(is_string($args) && is_dir(SD.DS.$args))
+									$tmp['directorys'][]=SD.DS.$args;
+							}
+							break;
+						case'anchorappend':
+							if(is_string($args))
+								$tmp['file']=$this->request['anchor'].$args;
+							break;
+						default:
+					}//end switch(mb_strtolower($cmd))
+				}//end foreach($data->action as $cmd=>$args)
+				if(count($tmp['directorys']))
+					foreach($tmp['directorys'] as $dir)
+						if(is_file($dir.DS.$tmp['file'])){
+							readfile($dir.DS.$tmp['file']);
+							break;
+						}
+				if(in_array('last',$flags) || (isset($flags['last']) && $flags['last']=true)){
+					$this->finishRequest();
+					return true;
+				}
+				$registeredMatch=true;
+			}//end action
+		}//end foreach($conf as $id=>$data)
+		if($registeredMatch)
+			return true;
 		return false;
 	}
 	private function loadRegisteredAnchor(){
 		if(isset($this->request['anchor']) && isset($this->request['anchor_type'])){
-			if(!system::SM()->isOpen('RM.anchors')){
-				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('RM.anchors'))
-					return false;
-			}
-			$conf=system::SM()->get('RM.anchors')->getConfig();
+			$conf=system::C()->get('RM.anchors');
 			$registeredMatch=false;
 			foreach($conf as $id=>$data){
 				/**$data=array(
@@ -213,10 +203,10 @@ class requestManager extends defaultClass{
 				*	);
 				**/
 				//parse filter
-				$flags=(isset($data['flags']))?$data['flags']:array();
-				if(isset($data['filter']) && isset($data['action']) && $this->filterMatch($data['filter'],$flags)){
+				$flags=(isset($data->flags))?$data->flags:array();
+				if(isset($data->filter) && isset($data->action) && $this->filterMatch($data->filter,$flags)){
 					$tmp=array('directorys'=>array(),'file'=>$this->request['anchor']); // store temporary stuff here
-					foreach($data['action'] as $cmd=>$args){
+					foreach($data->action as $cmd=>$args){
 						switch(mb_strtolower($cmd)){
 							case'run':
 								if(is_array($args))
@@ -298,7 +288,7 @@ class requestManager extends defaultClass{
 								break;
 							default:
 						}//end switch(mb_strtolower($cmd))
-					}//end foreach($data['action'] as $cmd=>$args)
+					}//end foreach($data->action as $cmd=>$args)
 					if(count($tmp['directorys']))
 						foreach($tmp['directorys'] as $dir)
 							if(is_file($dir.DS.$tmp['file'])){
@@ -318,9 +308,9 @@ class requestManager extends defaultClass{
 		return false;
 	}
 	private function loadDefaultPort(){
-		if(system::SM()->get('system.config')->get('Ports','RequestConf')=="on"){
-			$portsDir=system::SM()->get('system.config')->get('PortsDirectory','RequestConf');
-			$defaultPort=system::SM()->get('system.config')->get('DefaultPort','RequestConf');
+		if(system::C()->system->RequestConf->Ports=="on"){
+			$portsDir=system::C()->system->RequestConf->PortsDirectory;
+			$defaultPort=system::C()->system->RequestConf->DefaultPort;
 			if($defaultPort!==false && $portsDir!==false)
 				if(file_exists(RD.DS.$portsDir.DS.$defaultPort)){
 					include(RD.DS.$portsDir.DS.$defaultPort);
@@ -331,9 +321,9 @@ class requestManager extends defaultClass{
 		return false;
 	}
 	public function loadPorts(){
-		if(!isset($this->request['anchor']) || $this->request['anchor_type']!='php' || (system::SM()->get('system.config')->get('Ports','RequestConf')!="on"))
+		if(!isset($this->request['anchor']) || $this->request['anchor_type']!='php' || (system::C()->system->RequestConf->Ports!="on"))
 			return false;
-		$portsDir=system::SM()->get('system.config')->get('PortsDirectory','RequestConf');
+		$portsDir=system::C()->system->RequestConf->PortsDirectory;
 		if($portsDir!==false){
 			$portsDir=RD.DS.$portsDir;
 			if(file_exists($portsDir.DS.$this->request['anchor'])){
@@ -344,7 +334,7 @@ class requestManager extends defaultClass{
 		return false;
 	}
 	public function loadErrorPage($code="500",$text="Internal Server Error"){
-		$epDir=(defined('ERRORPAGEDIRECTORY'))?ERRORPAGEDIRECTORY:(system::SM()->get('system.config')->get('ErrorpageDirectory'));
+		$epDir=(defined('ERRORPAGEDIRECTORY'))?ERRORPAGEDIRECTORY:(system::C()->system->general->ErrorpageDirectory);
 		if(is_string($epDir)){
 			$epDir=(is_dir($epDir))?$epDir:((is_dir(RD.DS.$epDir))?RD.DS.$epDir:false);
 			if($epDir){
@@ -533,54 +523,53 @@ class requestManager extends defaultClass{
 		}
 		return false;
 	}
+	public function post($what,$type='string'){
+		if(isset($this->post[$what])){
+			switch($type){
+				case'int':
+					return intval($this->post[$what]);
+					break;
+				case'float':
+					return floatval($this->post[$what]);
+					break;
+				case'bool':
+					return (!empty($this->post[$what]))?true:false;
+					break;
+				default:
+				case'string':
+					return (string) $this->post[$what];
+			}
+		}
+		return false;
+	}
 	public function registerRequest($id,$filter,$action,$flags=array()){
 		if(is_string($id) && is_array($filter) && is_array($action) && is_array($flags)){
-			if(!system::SM()->isOpen('RM.requests')){
-				try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('RM.requests'))
-					return false;
-			}
-			system::SM()->get('RM.requests')->set($filter,'filter',$id);
-			system::SM()->get('RM.requests')->set($flags,'flags',$id);
-			system::SM()->get('RM.requests')->set($action,'action',$id);
+			system::C()->get('RM.requests')->get($id)->filter = $filter;
+			system::C()->get('RM.requests')->get($id)->flags = $flags;
+			system::C()->get('RM.requests')->get($id)->action = $action;
 			return true;
 		}
 		return false;
 	}
 	public function unregisterRequest($id){
 		if(is_string($id)){
-			if(!system::SM()->isOpen('RM.requests')){
-				try{new storage('RM.requests','fileConfig',CONFIGDIRECTORY.'RM.requests'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('RM.requests'))
-					return false;
-			}
-			system::SM()->get('RM.requests')->removeSection($id);
+			system::C()->get('RM.requests')->del($id);
 			return true;
 		}
 		return false;
 	}
 	public function registerAnchor($id,$filter,$action,$flags=array()){
 		if(is_string($id) && is_array($filter) && is_array($action) && is_array($flags)){
-			if(!system::SM()->isOpen('RM.anchors')){
-				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('RM.anchors'))
-					return false;
-			}
-			system::SM()->get('RM.anchors')->set($filter,'filter',$id);
-			system::SM()->get('RM.anchors')->set($flags,'flags',$id);
-			system::SM()->get('RM.anchors')->set($action,'action',$id);
+			system::C()->get('RM.anchors')->get($id)->filter = $filter;
+			system::C()->get('RM.anchors')->get($id)->flags = $flags;
+			system::C()->get('RM.anchors')->get($id)->action = $action;
 			return true;
 		}
 		return false;
 	}
 	public function unregisterAnchor($id){
 		if(is_string($id)){
-			if(!system::SM()->isOpen('RM.anchors')){
-				try{new storage('RM.anchors','fileConfig',CONFIGDIRECTORY.'RM.anchors'.EXT);}catch(StorageException $e){return false;}
-				if(!system::SM()->isOpen('RM.anchors'))
-					return false;
-			}
-			system::SM()->get('RM.anchors')->removeSection($id);
+			system::C()->get('RM.anchors')->del($id);
 			return true;
 		}
 		return false;

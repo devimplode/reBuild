@@ -4,9 +4,9 @@ class fileConfigHandler extends defaultClass{
 	private $edited=false;
 	
 	public function __construct($filename=false){
-		if(!(self::is_configFile($filename)))
-			throw new StorageException($filename." isn't a valid configFile");
 		$this->filename=$filename;
+		if(!self::is_configFile($filename))
+			return;
 		$db=parse_ini_file($filename,true);
 		if($db === false)
 			throw new StorageException("Couldn't parse ".$filename);
@@ -40,8 +40,11 @@ class fileConfigHandler extends defaultClass{
 		$this->write();// in case of class-destruction
 		return true;
 	}
+	public function valid($key, $sec='general'){
+		return((array_key_exists($sec,$this->db))?((array_key_exists($key,$this->db[$sec]))?true:false):false);
+	}
 	public function removeKey($key, $sec='general'){
-		if(isset($this->db[$sec][$key])){
+		if(isset($this->db[$sec])&&isset($this->db[$sec][$key])){
 			unset($this->db[$sec][$key]);
 			$this->edited=true;
 			system::LOG()->i('config',"Unsetting key '".$sec."->".$key."' in file '".$this->filename."'");
