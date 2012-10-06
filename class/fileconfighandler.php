@@ -14,8 +14,6 @@ class fileConfigHandler extends defaultClass{
 			$this->db[$secKey]=array();
 			foreach($sec as $key=>$val){
 				$this->db[$secKey][$key]=(((@unserialize($val)!==false) || ($val===serialize(false)))?unserialize($val):$val);
-				if($this->db[$secKey][$key] instanceOf reClosure)
-					$this->db[$secKey][$key]=$this->db[$secKey][$key]->getClosure();
 			}
 		}
 	}
@@ -35,8 +33,10 @@ class fileConfigHandler extends defaultClass{
 	}
 	public function set($value, $key, $sec='general'){
 		$this->edited=true;
+		if(!isset($this->db[$sec]))
+			$this->db[$sec]=array();
 		$this->db[$sec][$key]=$value;
-		system::LOG()->i('config',"Setting '".$sec."->".$key."' to '".((is_string($value))?$value:'Object')."' in file '".$this->filename."'");
+		system::LOG()->i('config',"Setting '".$sec."->".$key."' to ".((is_string($value)||is_int($value))?"'".$value."'":((is_object($value))?"<".get_class($value).">":((is_array($value))?'<Array>':'<Object>')))." in file '".$this->filename."'");
 		$this->write();// in case of class-destruction
 		return true;
 	}
@@ -67,21 +67,16 @@ class fileConfigHandler extends defaultClass{
 		if($this->live || !$this->edited)
 			return;
 		system::LOG()->v('config',"Gathering changes for file '".$this->filename."'");
-		
 		$this->db=$this->arrayCheckClosures($this->db);
 		$res = array();
-		foreach($this->db as $key => $val)
-		{
-			if(is_array($val))
-			{
+		foreach($this->db as $key => $val){
+			if(is_array($val)){
 				$res[] = EOL."[".$key."]";
-				foreach($val as $skey => $sval){
-					$res[] = $skey.' = "'.str_replace('"','\"',serialize($sval)).'"';
-				}
+				foreach($val as $skey => $sval)
+					$res[] = $skey.' = "'.str_replace('"','\"',str_replace('\\','\\\\',serialize($sval))).'"';
 			}
-			else{
+			else
 				$res[] = $key.' = "'.str_replace('"','\"',serialize($val)).'"';
-			}
 		}
 		system::LOG()->d('config',"Writing changes to file '".$this->filename."'");
 		mod::fileWrite($this->filename, utf8_encode("; <?php die(); ?>".EOL.implode(EOL, $res).EOL),0);
@@ -89,12 +84,10 @@ class fileConfigHandler extends defaultClass{
 	private function arrayCheckClosures($arr){
 		$ret=array();
 		foreach($arr as $key=>$val){
-			if(is_array($val)){
+			if(is_array($val))
 				$ret[$key]=$this->arrayCheckClosures($val);
-			}
-			elseif($val instanceOf Closure && !($val instanceOf reClosure)){
+			elseif($val instanceOf Closure)
 				$ret[$key]=new reClosure($val);
-			}
 			else
 				$ret[$key]=$val;
 		}
@@ -103,12 +96,8 @@ class fileConfigHandler extends defaultClass{
 	
 	public static final function is_configFile($filename=false){
 		if(is_file($filename))
-		{
 			if(preg_match("/^; <\?php die\(\); \?>([\r\n]{1,2})+([\w]+ = (\"([^\r\n\"]|[\\\][\"])*\"|\d+)([\r\n]{1,2})+)*(([\r\n]{1,2})*\[[\w]+\]([\r\n]{1,2})+([\w]+ = (\"([^\r\n\"]|[\\\][\"])*\"|\d+)([\r\n]{1,2})+)*)*\$/im",@file_get_contents($filename)))
-			{
 				return true;
-			}
-		}
 		return false;
 	}
 }
