@@ -16,14 +16,16 @@ class config implements Iterator{
 	private $db=array();
 	private $indexdb=array();
 	public function __construct($path=false,$handle=false){
-		if($path===false && $handle===false){
+		if(($path===false || is_dir($path)) && $handle===false){
 			//base object
 			//system::C()
 			$this->state=0;
+			$this->path=(is_dir($path))?$path:CONFIGDIRECTORY;
+			$this->parts=array($this->path);
 			$this->loadIndex();
 			return;
 		}
-		elseif(isset($path) && is_string($path) && $path!='' && (($handle instanceOf fileConfigHandler) || ($handle instanceOf config))){
+		elseif(isset($path) && is_string($path) && $path!='' && (is_a($handle,'fileConfigHandler') || is_a($handle,'config'))){
 			$parts=explode('->',$path,3);
 			$this->state=count($parts);
 			if($this->state>=1){
@@ -41,7 +43,7 @@ class config implements Iterator{
 			return;
 		switch($this->state){
 			case 0:
-				$t=new DirectoryIterator(CONFIGDIRECTORY);
+				$t=new DirectoryIterator($this->path);
 				foreach($t as $id=>$file){
 					if(!$file->isDot()){
 						$name=$file->getFilename();
@@ -93,7 +95,7 @@ class config implements Iterator{
 					return $this->db[$name];
 				}
 				try{
-					$this->db[$name]=new config($name,new fileConfigHandler(CONFIGDIRECTORY.$name.EXT));
+					$this->db[$name]=new config($name,new fileConfigHandler($this->path.DS.$name.EXT));
 					$this->loadIndex();
 					return $this->db[$name];
 				}
@@ -186,8 +188,8 @@ class config implements Iterator{
 					$this->indexdb=array_filter($this->indexdb,function($var)use($name){return($var!==$name);});//removing from index
 					if(isset($this->db[$name]))
 						unset($this->db[$name]);//removing from db and destroying/writing config file
-					if(file_exists(CONFIGDIRECTORY.$name.EXT) && is_file(CONFIGDIRECTORY.$name.EXT)){
-						if(@unlink(CONFIGDIRECTORY.$name.EXT)){//removing config file
+					if(file_exists($this->path.DS.$name.EXT) && is_file($this->path.DS.$name.EXT)){
+						if(@unlink($this->path.DS.$name.EXT)){//removing config file
 							$this->loadIndex();
 							return true;
 						}
@@ -214,7 +216,7 @@ class config implements Iterator{
 				break;
 			case 2:
 				if(in_array($name,$this->indexdb,true)!==false){
-					$this->indexdb=array_filter($this->indexdb,function($var){return($var!==$name);});
+					$this->indexdb=array_filter($this->indexdb,function($var)use($name){return($var!==$name);});
 					if($this->handler->removeKey($name,$this->parts[1])){
 						$this->loadIndex();
 						return true;
@@ -232,7 +234,7 @@ class config implements Iterator{
 		switch($this->state){
 			case 0:
 				//isset file
-				return((isset($this->db[$name]))||(fileConfigHandler::is_configFile(CONFIGDIRECTORY.$name.EXT)))?true:false;
+				return((isset($this->db[$name]))||(fileConfigHandler::is_configFile($this->path.DS.$name.EXT)))?true:false;
 				break;
 			case 1:
 				//isset section
