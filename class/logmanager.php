@@ -1,7 +1,7 @@
 <?php
 class logManager extends defaultClass{
 	//constants
-	const LOG_VERBOSE= 2;
+	const LOG_VERBOSE=2;
 	const LOG_DEBUG=3;
 	const LOG_INFO=4;
 	const LOG_WARN=5;
