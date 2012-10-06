@@ -36,7 +36,10 @@ class reClosure{
 	protected function _fetchCode()
 	{
 		// Open file and seek to the first line of the closure
-		$file = new SplFileObject($this->reflection->getFileName());
+		if(preg_match('/\(\d+\) : eval\(\)\'d code$/',$this->reflection->getFileName()))
+			throw new Exception("eval'd code can't be fetched for a reClosure instance!");
+		else
+			$file = new SplFileObject($this->reflection->getFileName());
 		$file->seek($this->reflection->getStartLine()-1);
 
 		// Remove comments from the code
@@ -139,7 +142,7 @@ class reClosure{
 			$this->reflection = new ReflectionFunction($_function);
 		}
 		else
-			throw new Exception();
+			throw new Exception("Something went wrong!");
 	}
 }
 ?>
