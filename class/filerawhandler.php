@@ -35,7 +35,7 @@ class fileRawHandler{
 		system::LOG()->v('storage.fileRawHandler',"open file '".$file."' with mode '".$mode."'");
 		try{
 			if(sizeof($options) && is_array($options)){
-				$this->resource = fopen($this->filename, $this->mode, $this->includePath, stream_context_create($options));
+				$this->fp = fopen($this->filename, $this->mode, $this->includePath, stream_context_create($options));
 			}
 			else{
 				$this->fp=fopen($this->filename, $this->mode, $this->includePath);
