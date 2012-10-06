@@ -30,8 +30,8 @@ class eventManager{
 				$event($args);
 	}
 	public function attach($eventName,$handlerName,$funct){
-		if(is_string($eventName) && is_string($handlerName) && ($funct instanceOf Closure || $funct instanceOf reClosure)){
-			if(system::C()->get('EM.events')->get($eventName)->set($funct,$handlerName))
+		if(is_string($eventName) && is_string($handlerName) && ($funct instanceOf Closure || is_a($funct,'reClosure'))){
+			if(system::C()->get('EM.events')->get($eventName)->set($handlerName,$funct))
 				return true;
 		}
 		return false;
