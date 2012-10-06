@@ -77,7 +77,7 @@ class requestManager extends defaultClass{
 					//extend this list with more handlers, if you want - and set the default fallback number 5 to higher ranges (up to 99)
 			}
 		}
-		system::LOG()->d('requestmanager.processor',"processRequest halted! internal counter _requestState is on level '".intval($this->_requestState)."'");
+		system::LOG()->v('requestmanager.processor',"processRequest halted! internal counter _requestState is on level '".intval($this->_requestState)."'");
 	}
 	public function finishRequest(){
 		//call this function to stop requestManager::processRequest()
@@ -97,7 +97,7 @@ class requestManager extends defaultClass{
 						case'run':
 							if(is_array($args))
 								foreach($args as $k=>$v){
-									if($v instanceof reClosure){ //0=>function(){system::do(stuff);}
+									if(is_a($v,'reClosure')){ //0=>function(){system::do(stuff);}
 										$v();
 									}
 									elseif(is_string($v) && function_exists($v) && in_array($v,get_defined_functions())){ //0=>'functionname'
@@ -108,7 +108,7 @@ class requestManager extends defaultClass{
 									}
 								}
 							else
-								if($args instanceof reClosure){ //0=>function(){system::do(stuff);}
+								if(is_a($args,'reClosure')){ //0=>function(){system::do(stuff);}
 									$args();
 								}
 								elseif(is_string($args) && function_exists($args) && in_array($args,get_defined_functions())){ //'run'=>'functionname'
@@ -211,18 +211,18 @@ class requestManager extends defaultClass{
 							case'run':
 								if(is_array($args))
 									foreach($args as $k=>$v){
-										if($v instanceof reClosure){ //0=>function(){system::do(stuff);}
+										if(is_a($args,'reClosure') || $v instanceof Closure){ //0=>function(){system::do(stuff);}
 											$v();
 										}
 										elseif(is_string($v) && function_exists($v) && in_array($v,get_defined_functions())){ //0=>'functionname'
 											$v();
 										}
-										elseif(is_string($k) && is_string($v) && (class_exists($k) && in_array($k,get_declared_classes())) && (method_exists($k,$v) && in_array($v,get_class_methods($k))) ){ //'classname'=>'functionname'
+										elseif(is_string($k) && is_string($v)){ //'classname'=>'functionname'
 											$k::$v();
 										}
 									}
 								else{
-									if($args instanceof reClosure){ //0=>function(){system::do(stuff);}
+									if(is_a($args,'reClosure') || $v instanceof Closure){ //0=>function(){system::do(stuff);}
 										$args();
 									}
 									elseif(is_string($args) && function_exists($args) && in_array($args,get_defined_functions())){ //'run'=>'functionname'
@@ -320,14 +320,19 @@ class requestManager extends defaultClass{
 		}
 		return false;
 	}
-	public function loadPorts(){
-		if(!isset($this->request['anchor']) || $this->request['anchor_type']!='php' || (system::C()->system->RequestConf->Ports!="on"))
+	public static function loadPorts(){
+		if(is_string(system::RM()->request('anchor')) && system::RM()->request('anchor_type')=='php' && (system::C()->system->RequestConf->Ports=="on"))
+			return self::loadPort(system::RM()->request('anchor'));
+		return false;
+	}
+	public static function loadPort($file=false){
+		if(!is_string($file) || (mb_strrpos($file,EXT)!==mb_strlen($file)-mb_strlen(EXT)) || (system::C()->system->RequestConf->Ports!="on"))
 			return false;
 		$portsDir=system::C()->system->RequestConf->PortsDirectory;
 		if($portsDir!==false){
 			$portsDir=RD.DS.$portsDir;
-			if(file_exists($portsDir.DS.$this->request['anchor'])){
-				include($portsDir.DS.$this->request['anchor']);
+			if(file_exists($portsDir.DS.$file)){
+				include($portsDir.DS.$file);
 				return true;
 			}
 		}
