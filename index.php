@@ -7,16 +7,17 @@ define('CD',RD.DS.'class'); //CLASS-Directory
 define('MD',RD.DS.'mod'); //MOD-Directory
 define('SD',RD.DS.'store'); //STORAGE-Directory
 define('LOGDIRECTORY',SD.DS.'log'); //LOG-Directory
-define('CONFIGDIRECTORY',SD.DS."config".DS); //CONFIG-Directory
+define('CONFIGDIRECTORY',SD.DS."config"); //CONFIG-Directory
 define('EXT','.php');
 define('EOL',PHP_EOL);
 
 require_once(CD.DS.'system'.EXT);
 new system(); //initiate default-system for ReBuild-Framework
+system::EM()->onSystemReady();
 
 define('endTime',microtime(true));
 if(DEBUG){
-	print("ScriptExecutionDuration=".((float)endTime-(float)startTime).EOL);
+	print(EOL."ScriptExecutionDuration=".((float)endTime-(float)startTime).EOL);
 	print_r($_GET);
 	print_r($_SERVER);
 }
