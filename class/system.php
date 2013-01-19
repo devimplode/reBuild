@@ -18,12 +18,10 @@ class system{
 		self::registerAlias('config','C');
 		self::load('logManager');
 		self::registerAlias('logManager','LOG');
-		self::load('storageManager');
-		self::registerAlias('storageManager','SM');
 		self::load('eventManager');
 		self::registerAlias('eventManager','EM');
-		self::load('databaseManager');
-		self::registerAlias('databaseManager','DB');
+		self::load('storageManager');
+		self::registerAlias('storageManager','SM');
 		self::load('requestManager');
 		self::registerAlias('requestManager','RM');
 	}
